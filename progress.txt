@@ -1,1 +1,3 @@
 Day 1 : live geolocation, Socket.io real-time streaming, multi-device broadcast, and ngrok tunneling
+
+Day 2 : postgresql connection and 24 polyline data pulling. 

@@ -77,30 +77,6 @@
         }
     }
 
-    function getLocation() {
-      const output = document.getElementById("output");
-
-      if (!("geolocation" in navigator)) {
-        output.innerText = "Geolocation not supported";
-        return;
-      }
-
-      output.innerText = "Fetching location...";
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude, accuracy } = pos.coords;
-          output.innerText = `Lat: ${latitude}, Lng: ${longitude} (±${accuracy}m) , timestamp: ${new Date(pos.timestamp).toLocaleTimeString()}`;
-
-          // send to backend
-          socket.emit("location", { latitude, longitude, accuracy, timestamp: new Date(pos.timestamp).toLocaleTimeString() });
-        },
-        (err) => {
-          output.innerText = "Error: " + err.message;
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
   </script>
 </body>
 </html>
