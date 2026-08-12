@@ -1,0 +1,1 @@
+Day 1 : live geolocation, Socket.io real-time streaming, multi-device broadcast, and ngrok tunneling
