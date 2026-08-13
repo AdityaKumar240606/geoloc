@@ -20,10 +20,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const pool = new Pool({
-  user: "postgres",          // Your pgAdmin default user
+  user: "postgres",  
   host: "localhost",
-  database: "tracker_db",    // The database you created
-  password: "aditya", // Your PostgreSQL password
+  database: "tracker_db",    
+  password: "aditya", 
   port: 5432,
 });
 
