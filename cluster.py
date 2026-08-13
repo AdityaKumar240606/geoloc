@@ -32,7 +32,7 @@ df['time_diff_mins'] = df['recorded_at'].diff().dt.total_seconds() / 60.0
 df['time_diff_mins'] = df['time_diff_mins'].fillna(0)
 df['time_spent_mins'] = df['time_diff_mins'].shift(-1).fillna(0)
 
-stay_points = df[df['time_spent_mins'] >= 0.5].copy()
+stay_points = df[df['time_spent_mins'] >=15].copy()
 
 if stay_points.empty:
     print("No stay points found.")
