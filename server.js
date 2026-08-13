@@ -78,7 +78,7 @@ app.get("/api/route-line", async (req, res) => {
     const query = `
       SELECT ST_AsGeoJSON(ST_MakeLine(geom ORDER BY recorded_at)) AS route_line
       FROM location_logs
-      WHERE recorded_at >= NOW() - INTERVAL '24 hours';
+      WHERE recorded_at >= NOW() - INTERVAL '1 hour';
     `;
     const result = await pool.query(query);
     res.json(JSON.parse(result.rows[0].route_line));
