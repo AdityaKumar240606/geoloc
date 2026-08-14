@@ -1,2 +1,3 @@
 node_modules/
 .envgit commit -m "Add gitignore"
+plan/
