@@ -1,14 +1,14 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI, HTTPException
 import pandas as pd
 import psycopg2
 import numpy as np
 from sklearn.cluster import DBSCAN
+from contextlib import asynccontextmanager
 
-app = FastAPI()
 transition_matrix = pd.DataFrame()
 
-@app.lifespan("startup")
-def train_model():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global transition_matrix
 
     conn = psycopg2.connect(host="localhost",database="tracker_db",user="postgres",password="aditya",port="5432")
@@ -22,20 +22,30 @@ def train_model():
     df['time_diff_mins'] = df['recorded_at'].diff().dt.total_seconds() / 60.0
     df['time_spent_mins'] = df['time_diff_mins'].shift(-1).fillna(0)
     stay_points = df[df['time_spent_mins'] >= 0.5].copy()
-
-    if not stay_points.empty:
-
-        coords = np.radians(stay_points[['latitude', 'longitude']])
-        dbscan = DBSCAN(eps=40.0 / 6371000.0, min_samples=1, algorithm='ball_tree', metric='haversine')
-        stay_points['place_id'] = dbscan.fit_predict(coords)
-        transition_counts = stay_points.groupby(['place_id', 'next_place_id']).size().unstack(fill_value=0)
-        transition_probs = transition_counts.div(transition_counts.sum(axis=1), axis=0) * 100
+    
+    try:
+        if not stay_points.empty:
+            coords = np.radians(stay_points[['latitude', 'longitude']])
+            dbscan = DBSCAN(eps=40.0 / 6371000.0, min_samples=1, algorithm='ball_tree', metric='haversine')
+            stay_points['place_id'] = dbscan.fit_predict(coords)
+            
+            stay_points['next_place_id'] = stay_points['place_id'].shift(-1)
+            transitions = stay_points.dropna(subset=['next_place_id']).copy()
+            
+            transition_counts = transitions.groupby(['place_id', 'next_place_id']).size().unstack(fill_value=0)
+            transition_probs = transition_counts.div(transition_counts.sum(axis=1), axis=0) * 100
+            
+            transition_matrix = transition_probs
+            print("Model trained successfully")
+        else:
+            print("No stay points found")
+    except Exception as e:
+        print(f"Error training model: {e}")
+        raise e
         
-        # Save to our global variable
-        transition_matrix = transition_probs
-        print("Model trained successfully")
-    else:
-        print("No stay points found")
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/predict/{current_place_id}")
 def get_prediction(current_place_id: float):
@@ -55,5 +65,3 @@ def get_prediction(current_place_id: float):
         "current_place": current_place_id,
         "predictions": valid_predictions
     }
-
-
