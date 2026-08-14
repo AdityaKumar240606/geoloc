@@ -53,3 +53,14 @@ else:
 
     print("Summary of identified places:")
     print(summary)
+
+
+stay_points['next_place_id'] = stay_points['place_id'].shift(-1)
+
+transitions = stay_points.dropna(subset = ['next_place_id']).copy()
+transitions['next_place_id'] = transitions['next_place_id'].astype(int)
+transition_counts = transitions.groupby(['place_id', 'next_place_id']).size().reset_index(name='count')
+transition_probs = transition_counts.div(transition_counts.sum(axis=1), axis=0) * 100
+print(transition_probs.round(1))
+
+
