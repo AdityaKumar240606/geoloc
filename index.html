@@ -1,23 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Geo Demo</title>
+  <title>Personal Tracker</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="index.css" />
 </head>
 <body>
-  <h1>My Location</h1>
-  <button onclick="startTracking()">Start Tracking</button>
-  <button onclick="stopTracking()">Stop Tracking</button>
-  <p id="output">Click the button...</p>
-  <div id ="others"></div>
-  <div id="map" style="height: 400px; width: 100%; margin-top: 10px;"></div>
-    <script src="/socket.io/socket.io.js"></script>
+  
+  <div class="dashboard">
+    <header>
+      <h1>Location Tracker</h1>
+    </header>
+
+    <div class="glass-panel">
+      <div class="controls">
+        <button onclick="startTracking()">Start Tracking</button>
+        <button class="stop-btn" onclick="stopTracking()">Stop Tracking</button>
+      </div>
+
+      <div class="stats">
+        <h3>Live Status</h3>
+        <p id="output">Ready. Click Start to begin tracking.</p>
+      </div>
+
+      <div class="stats" style="margin-top: 1rem;">
+        <h3>Other Devices</h3>
+        <div id="others">Waiting for connections...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+  
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    const map = L.map("map").setView([22.3210, 87.3025], 15);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors"
+    const map = L.map("map", {zoomControl: false}).setView([22.3210, 87.3025], 15);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Premium dark tile layer (CartoDB Dark Matter)
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>'
     }).addTo(map);
     let myMarker = null;
     socket.on("connect", () => {
@@ -36,9 +60,10 @@
         container.innerHTML = "";
         for(const id in otherDevices){
             const d = otherDevices[id];
-            const line = document.createElement("p");
-            line.innerText = `Device ${id.slice(0, 5)}: ${d.latitude}, ${d.longitude} (±${d.accuracy}m) at ${d.timestamp}`;
-            container.appendChild(line);
+            const card = document.createElement("div");
+            card.className = "device-card";
+            card.innerText = `Device ${id.slice(0, 5)}: ${parseFloat(d.latitude).toFixed(4)}, ${parseFloat(d.longitude).toFixed(4)}`;
+            container.appendChild(card);
         }
     }
     function getHaversineDistance(lat1, lon1, lat2, lon2) {
